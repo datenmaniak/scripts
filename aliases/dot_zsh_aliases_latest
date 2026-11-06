@@ -229,6 +229,7 @@ chez_alias=(
     chefor   "chezmoi forget"
     chea-zsh   "chezmoi add \$HOME/.zshrc"
     chea-his   "chezmoi add \$HOME/.zsh_history"
+    cheae-his   "chezmoi add \$HOME/.zsh_history --encrypt"
     chea-alias   "chezmoi add \$HOME/.zsh_aliases"
     chea-alac   "chezmoi add \$HOME/.config/alacritty"
     chea-tmux   "chezmoi add \$HOME/.config/tmux"
