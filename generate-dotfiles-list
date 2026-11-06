@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# generate-all-dotfiles.sh
+# Escanea la raíz del HOME y genera la lista de dotfiles/carpetas esenciales
+
+OUTPUT_FILE="${1:-dotfiles.txt}"
+
+# Directorios o archivos específicos que NO quieres respaldar (puedes añadir más)
+EXCLUDES=(
+    "."
+    ".."
+    ".cache"
+    ".local"
+    ".local/share"
+    ".mozilla"
+    ".thunderbird"
+    ".npm"
+    ".cargo"
+    ".rustup"
+)
+
+echo "Generando lista completa de dotfiles desde $HOME..."
+
+# Busca elementos en la raíz del HOME que empiecen por punto (.)
+find "$HOME" -maxdepth 1 -name ".*" | while read -r path; do
+    name=$(basename "$path")
+    
+    # Verificar si el elemento está en la lista de exclusión
+    skip=0
+    for ex in "${EXCLUDES[@]}"; do
+        if [[ "$name" == "$ex" ]]; then
+            skip=1
+            break
+        fi
+    done
+    
+    # Si no está excluido, se añade a la lista (guardando solo el nombre relativo)
+    if [[ $skip -eq 0 ]]; then
+        echo "$name"
+    fi
+done | sort -u > "$OUTPUT_FILE"
+
+echo "¡Lista generada con éxito en: $OUTPUT_FILE!"

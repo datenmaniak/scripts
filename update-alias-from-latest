@@ -1,0 +1,7 @@
+#!/usr/bin/zsh
+
+cp $SCRIPTS/aliases/dot_zsh_aliases_latest $HOME/.zsh_aliases
+
+source $HOME/.zsh_aliases
+
+echo "Zsh Aliases updated"

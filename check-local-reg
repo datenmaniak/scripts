@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+curl -v https://local-reg.dk.lab:5000/v2/

@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+# listar-path.zsh — muestra cada entrada del PATH, marcando las inexistentes
+
+for dir in ${(s.:.)PATH}; do
+  [[ -d $dir ]] && print -r -- "$dir" || print -r -- "$dir  [no existe]"
+done

@@ -1,0 +1,4 @@
+#!/usr/bin/env zsh
+# listar-path.zsh — muestra cada entrada del PATH, una por línea
+
+print -l ${(s.:.)PATH}

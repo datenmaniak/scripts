@@ -1,0 +1,4 @@
+#!/usr/bin/zsh
+
+
+nvim $SCRIPTS/aliases/dot_zsh_aliases_latest

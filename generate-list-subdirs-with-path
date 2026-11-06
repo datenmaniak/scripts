@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Uso: generate-list-subdirs-with-path.sh <directorio_origen> [archivo_salida]
+#
+# Analiza el directorio indicado y genera, en el directorio actual
+# (desde donde se ejecuta el script), un archivo con la lista de
+# subdirectorios de primer nivel, cada línea con la ruta completa
+# (origen + nombre del subdirectorio), entre comillas dobles.
+#
+# Ejemplo:
+#   ./generate-list-subdirs-with-path.sh ~/.config
+#   -> crea una lista de directorios  con la ruta del directorio solicitado:
+#      ".config/tmux"
+#      ".config/alacritty"
+
+# ---------------------------------------------------------------------------
+# Validación de argumentos
+# ---------------------------------------------------------------------------
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+  echo "Uso: $(basename "$0") <directorio_origen> [archivo_salida]" >&2
+  echo "  <directorio_origen>  Directorio a analizar (obligatorio)." >&2
+  echo "  [archivo_salida]     Nombre del archivo de salida (opcional)." >&2
+  echo "                       Por defecto: ./<nombre_directorio>_directories" >&2
+  exit 1
+fi
+
+ORIGEN="$1"
+
+# Validar que el origen exista
+if [[ ! -e "$ORIGEN" ]]; then
+  echo "Error: '$ORIGEN' no existe." >&2
+  exit 1
+fi
+
+# Validar que el origen sea un directorio
+if [[ ! -d "$ORIGEN" ]]; then
+  echo "Error: '$ORIGEN' no es un directorio válido." >&2
+  exit 1
+fi
+
+# Validar que sea legible
+if [[ ! -r "$ORIGEN" ]]; then
+  echo "Error: '$ORIGEN' no tiene permisos de lectura." >&2
+  exit 1
+fi
+
+# Normalizar el origen quitando barras finales (excepto en "/")
+ORIGEN_NORM="${ORIGEN%/}"
+[[ -z "$ORIGEN_NORM" ]] && ORIGEN_NORM="/"
+
+# ---------------------------------------------------------------------------
+# Determinación del archivo de salida (siempre en el directorio actual)
+# ---------------------------------------------------------------------------
+if [[ $# -eq 2 ]]; then
+  SALIDA="$PWD/$2"
+else
+  BASE="$(basename "$(realpath "$ORIGEN")")"
+  SALIDA="$PWD/${BASE}_directories"
+fi
+
+# Validar que el directorio de salida (PWD) sea escribible
+if [[ ! -w "$PWD" ]]; then
+  echo "Error: no hay permisos de escritura en '$PWD'." >&2
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Generación del listado
+# Cada línea: "<origen>/<subdirectorio>" entre comillas dobles
+# ---------------------------------------------------------------------------
+find "$ORIGEN_NORM" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' |
+  sed "s|^|\"${ORIGEN_NORM}/|; s|\$|\"|" >"$SALIDA"
+
+echo "Listado generado en: $SALIDA"

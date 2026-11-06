@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# revisar-shebangs.sh — revisa archivos del directorio actual y verifica
+# que la primera línea contenga un shebang válido (#!/...).
+#
+# Uso:
+#   ./revisar-shebangs.sh              # solo lista el estado
+#   ./revisar-shebangs.sh -update      # añade shebang a los que no lo tienen
+#   ./revisar-shebangs.sh -update '*.sh'   # filtra por patrón (opcional)
+#   ./revisar-shebangs.sh '*.py'       # solo lista los .py
+#
+# Funciona igual invocado desde bash o zsh.
+
+set -u
+
+# ---------------------------------------------------------------------------
+# Parseo de argumentos
+# ---------------------------------------------------------------------------
+UPDATE=0
+PATRON="*"
+
+for arg in "$@"; do
+  case "$arg" in
+    -update) UPDATE=1 ;;
+    -h|--help)
+      sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    -*)
+      echo "Opción desconocida: $arg" >&2
+      exit 1
+      ;;
+    *)
+      PATRON="$arg"
+      ;;
+  esac
+done
+
+# ---------------------------------------------------------------------------
+# Detectar shell en ejecución (bash vs zsh) y ajustar globbing
+# ---------------------------------------------------------------------------
+if [ -n "${ZSH_VERSION-}" ]; then
+  setopt null_glob
+else
+  shopt -s nullglob
+fi
+
+# ---------------------------------------------------------------------------
+# Shebang por defecto para el modo -update
+# Puedes sobrescribirlo con la variable de entorno SHEBANG
+# ---------------------------------------------------------------------------
+SHEBANG_DEF="${SHEBANG:-#!/usr/bin/env bash}"
+
+# ---------------------------------------------------------------------------
+# Funciones
+# ---------------------------------------------------------------------------
+leer_primera() {
+  # Imprime la primera línea del archivo (vacía si está vacío)
+  IFS= read -r linea <"$1" || true
+  printf '%s' "$linea"
+}
+
+agregar_shebang() {
+  local f="$1" tmp
+  tmp="$(mktemp)" || { echo "No se pudo crear temporal" >&2; return 1; }
+
+  # Escribir shebang + salto de línea + contenido original
+  {
+    printf '%s\n' "$SHEBANG_DEF"
+    cat -- "$f"
+  } >"$tmp" || { rm -f -- "$tmp"; return 1; }
+
+  # Preservar permisos originales
+  if command -v chmod >/dev/null 2>&1; then
+    chmod --reference="$f" "$tmp" 2>/dev/null || chmod +x "$tmp"
+  fi
+
+  mv -- "$tmp" "$f"
+}
+
+revisar() {
+  local f="$1" primera
+  primera="$(leer_primera "$f")"
+
+  if [ -z "$primera" ]; then
+    if [ "$UPDATE" -eq 1 ]; then
+      agregar_shebang "$f" && printf 'AÑADIDO      %s\n' "$f"
+    else
+      printf 'VACÍO        %s\n' "$f"
+    fi
+    return
+  fi
+
+  if [ "${primera#\#!}" != "$primera" ]; then
+    # Ya tiene shebang
+    [ "$UPDATE" -eq 1 ] && printf 'YA-TIENE     %-30s %s\n' "$f" "${primera#\#\!}" \
+                        || printf 'OK           %-30s %s\n' "$f" "${primera#\#\!}"
+    return
+  fi
+
+  # Sin shebang
+  if [ "$UPDATE" -eq 1 ]; then
+    agregar_shebang "$f" && printf 'AÑADIDO      %s\n' "$f"
+  else
+    printf 'SIN-SHEBANG  %s\n' "$f"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Recorrer el directorio actual (sin recursión)
+# ---------------------------------------------------------------------------
+if [ -n "${ZSH_VERSION-}" ]; then
+  for f in ${~PATRON}; do
+    [ -f "$f" ] && revisar "$f"
+  done
+else
+  for f in $PATRON; do
+    [ -f "$f" ] && revisar "$f"
+  done
+fi

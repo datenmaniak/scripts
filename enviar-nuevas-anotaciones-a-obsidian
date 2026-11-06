@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+rsync -av ~/notas/* datenmaniak@victus:~/obsidian-notes/

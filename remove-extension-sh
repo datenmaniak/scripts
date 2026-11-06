@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# quitar-sh.sh — renombra *.sh a * (quita la extensión) en el directorio actual
+
+for f in *.sh; do
+  [[ -e $f ]] && mv -- "$f" "${f%.sh}"
+done

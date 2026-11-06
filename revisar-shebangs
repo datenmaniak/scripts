@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# revisar-shebangs.sh — revisa archivos del directorio actual y verifica
+# que la primera línea contenga un shebang válido (#!/...).
+# Funciona igual invocado desde bash o zsh.
+
+set -u
+
+# Extensiones / patrones típicos de scripts a revisar.
+# Si no se pasa argumento, se revisan todos los archivos regulares.
+PATRON="${1:-}"
+
+revisar() {
+  local f="$1"
+  local primera
+
+  # Leer solo la primera línea, sin cargar todo el archivo
+  IFS= read -r primera <"$f" || true
+
+  if [[ -z $primera ]]; then
+    printf 'VACÍO        %s\n' "$f"
+    return
+  fi
+
+  if [[ $primera == '#!'* ]]; then
+    printf 'OK           %-30s %s\n' "$f" "${primera#\#\!}"
+    return
+  fi
+
+  # Sin shebang: intentar adivinar si al menos "parece" un script
+  if [[ $primera == '#!'* || $primera =~ ^#.* ]]; then
+    printf 'SIN-SHEBANG  %s  (primera línea: comentario)\n' "$f"
+  else
+    printf 'SIN-SHEBANG  %s\n' "$f"
+  fi
+}
+
+# Recorrer el directorio actual (sin recursión), solo archivos regulares
+shopt -s nullglob
+if [[ -n $PATRON ]]; then
+  archivos=( $PATRON )
+else
+  archivos=( * )
+fi
+
+for f in "${archivos[@]}"; do
+  [[ -f $f ]] && revisar "$f"
+done

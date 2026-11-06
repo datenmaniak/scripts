@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# alacritty-setfont — cambia el tamaño de fuente de Alacritty
+# Uso: ./alacritty-setfont <size>
+# Ejemplo: ./alacritty-setfont 13
+
+set -euo pipefail
+
+CONFIG="${HOME}/.config/alacritty/alacritty.toml"
+
+# --- Validar argumento ---
+if [[ $# -ne 1 ]]; then
+    echo "Uso: $(basename "$0") <size>" >&2
+    echo "Ejemplo: $(basename "$0") 13" >&2
+    exit 1
+fi
+
+NEW_SIZE="$1"
+
+if ! [[ "$NEW_SIZE" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+    echo "Error: '$NEW_SIZE' no es un número válido." >&2
+    exit 1
+fi
+
+# --- Comprobar que existe el archivo ---
+if [[ ! -f "$CONFIG" ]]; then
+    echo "Error: no se encontró $CONFIG" >&2
+    exit 1
+fi
+
+# --- Comprobar que hay una línea 'size = <número>' ---
+if ! grep -qE '^[[:space:]]*size[[:space:]]*=[[:space:]]*[0-9]+([.][0-9]+)?[[:space:]]*$' "$CONFIG"; then
+    echo "Error: no se encontró ninguna línea 'size = <número>' en $CONFIG" >&2
+    exit 1
+fi
+
+# --- Backup ---
+cp "$CONFIG" "${CONFIG}.bak"
+
+# --- Reemplazar el tamaño actual por el nuevo ---
+sed -i -E "s/^([[:space:]]*size[[:space:]]*=[[:space:]]*)[0-9]+([.][0-9]+)?([[:space:]]*)\$/\\1${NEW_SIZE}\\3/" "$CONFIG"
+
+# --- Aplicar en vivo si hay una instancia de Alacritty abierta ---
+if [[ -n "${ALACRITTY_SOCKET:-}" ]] || pgrep -x alacritty >/dev/null 2>&1; then
+    alacritty msg config "font.size=${NEW_SIZE}" 2>/dev/null || true
+fi
+
+# --- Mostrar resultado ---
+echo "Tamaño de fuente cambiado a ${NEW_SIZE} en $CONFIG"
+grep -E '^[[:space:]]*size[[:space:]]*=' "$CONFIG"
+echo "   (backup guardado en ${CONFIG}.bak)"
