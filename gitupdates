@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+show_help() {
+  echo "Uso: $(basename "$0") [--tipo] \"mensaje del commit\""
+  echo ""
+  echo "Banderas disponibles:"
+  echo "  --chore    chore: <mensaje>"
+  echo "  --feat     feat: <mensaje>"
+  echo "  --fix      fix: <mensaje>"
+  echo "  --style    style: <mensaje>"
+  echo "  --docs     docs: <mensaje>"
+  echo ""
+  echo "Ejemplos:"
+  echo "  $(basename "$0") --fix \"corregida ruta de configuración\""
+  echo "  $(basename "$0") \"actualizada documentación\"  # abre menú de selección"
+  exit 1
+}
+
+# Sin argumentos -> Mostrar ayuda
+[[ $# -eq 0 ]] && show_help
+
+TYPE=""
+MSG=""
+
+# Procesar argumentos
+case "$1" in
+  --chore|--feat|--fix|--style|--docs)
+    TYPE="${1#--}"
+    MSG="$2"
+    ;;
+  -h|--help)
+    show_help
+    ;;
+  *)
+    MSG="$1"
+    ;;
+esac
+
+# Validar que existe un mensaje
+if [[ -z "$MSG" ]]; then
+  echo "❌ Error: Falta el mensaje del commit."
+  show_help
+fi
+
+# Si no se especificó bandera, seleccionar interactivamente
+if [[ -z "$TYPE" ]]; then
+  TYPES=("chore" "feat" "fix" "style" "docs")
+  echo "Selecciona el tipo para: \"$MSG\""
+  PS3="Opción [1-${#TYPES[@]}]: "
+  select SELECTED_TYPE in "${TYPES[@]}"; do
+    if [[ -n "$SELECTED_TYPE" ]]; then
+      TYPE="$SELECTED_TYPE"
+      break
+    else
+      echo "Opción inválida."
+    fi
+  done
+fi
+
+# Ejecutar el flujo de Git
+
+git remote -v
+echo "Actualizando Repo..."
+echo "Commit: ${TYPE}: ${MSG}"
+git add . && git commit -m "$TYPE: $MSG" && git push
