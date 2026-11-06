@@ -1,0 +1,71 @@
+#!/usr/bin/bash
+
+KEY_FILE="$HOME/.config/age/agekey.txt"
+DEFAULT_DIR="generic-dotfiles-ageKey"
+
+usage() {
+    echo "Requerimientos:"
+    echo "  - age (para utilizar la llave con chezmoi)"
+    echo "  - Permisos de lectura/escritura en el sistema de archivos"
+    echo ""
+    echo "Uso: $0 [opcion]"
+    echo "Opciones:"
+    echo "  respaldar   Copia la llave local ($KEY_FILE) a una ruta de destino"
+    echo "              (Directorio por defecto: $DEFAULT_DIR)"
+    echo "  restaurar   Restaura la llave desde una ruta de origen hacia $KEY_FILE"
+    echo "              (Directorio por defecto: $DEFAULT_DIR)"
+    exit 1
+}
+
+respaldar() {
+    if [ ! -f "$KEY_FILE" ]; then
+        echo "Error: No se encuentra la llave local en $KEY_FILE" >&2
+        exit 1
+    fi
+
+    read -rp "Ingrese la ruta de destino [$DEFAULT_DIR]: " dest_dir
+    dest_dir="${dest_dir:-$DEFAULT_DIR}"
+
+    mkdir -p "$dest_dir" || { echo "Error al crear el directorio de destino." >&2; exit 1; }
+
+    cp "$KEY_FILE" "$dest_dir/agekey.txt" && chmod 600 "$dest_dir/agekey.txt"
+    echo "Llave respaldada exitosamente en $dest_dir/agekey.txt"
+}
+
+restaurar() {
+    read -rp "Ingrese la ruta o directorio de origen [$DEFAULT_DIR]: " origen
+    origen="${origen:-$DEFAULT_DIR}"
+
+    if [ -d "$origen" ]; then
+        src_file="$origen/agekey.txt"
+    else
+        src_file="$origen"
+    fi
+
+    if [ ! -f "$src_file" ]; then
+        echo "Error: No se encuentra el archivo de la llave en $src_file" >&2
+        exit 1
+    fi
+
+    mkdir -p "$(dirname "$KEY_FILE")" || { echo "Error al crear el directorio de configuracion." >&2; exit 1; }
+
+    cp "$src_file" "$KEY_FILE" && chmod 600 "$KEY_FILE"
+    echo "Llave restaurada exitosamente en $KEY_FILE"
+}
+
+if [ $# -eq 0 ]; then
+    usage
+fi
+
+case "$1" in
+    respaldar)
+        respaldar
+        ;;
+    restaurar)
+        restaurar
+        ;;
+    *)
+        echo "Opcion invalida: $1" >&2
+        usage
+        ;;
+esac

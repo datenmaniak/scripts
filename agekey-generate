@@ -1,0 +1,14 @@
+#!/usr/bin/bash
+
+# Ejecuta el siguiente comando para generar una clave privada
+# y guardarla en tu archivo de identidad estándar (~/.config/age/key.txt):
+
+KEYPATH="$HOME/.config/age"
+
+if [ ! -d "$KEYPATH" ]; then
+  mkdir -p "$KEYPATH"
+fi
+
+age-keygen -o "$KEYPATH/agekey.txt"
+
+echo "Key saved at: ${KEYPATH}"

@@ -1,0 +1,7 @@
+
+
+# Detener el agente actual de GPG
+gpgconf --kill gpg-agent
+
+# Forzar el inicio del agente y actualizar la caché de conexiones
+gpg-agent --daemon --enable-ssh-support

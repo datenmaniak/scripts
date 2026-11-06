@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+
+# ¿Qué pasa si ya tienes la clave privada (key.txt) en tu máquina
+# principal y solo necesitas sacar el recipient?
+
+# Si ya tienes tu archivo key.txt pero no recuerdas o necesitas
+# extraer la clave pública (recipient) para configurarla,
+# puedes obtenerla ejecutando:
+
+KEYPATH="$HOME/.config/age"
+
+if [ ! -d "$KEYPATH" ]; then
+  echo "Age Key not found"
+fi
+
+age-keygen -y "$KEYPATH/agekey.txt"
