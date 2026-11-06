@@ -1,4 +1,8 @@
 #!/usr/bin/zsh
 
 
-nvim $SCRIPTS/aliases/dot_zsh_aliases_latest
+
+cp ~/.zsh_aliases $SCRIPTS/aliases/dot_zsh_aliases_bak
+nvim ~/.zsh_aliases 
+cp ~/.zsh_aliases $SCRIPTS/aliases/dot_zsh_aliases_latest 
+ls $SCRIPTS/aliases/ 

@@ -1,0 +1,8 @@
+#!/usr/bin/zsh
+
+
+
+cp ~/.zshrc $TALLER/dot_zshrc_bak
+nvim ~/.zshrc
+cp ~/.zshrc $TALLER/dot_zshrc_latest 
+ls -l $TALLER 

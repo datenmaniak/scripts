@@ -1,6 +1,6 @@
 # -----  ZSH Aliases & Helpers -----
 
-# update: 2025, Nov 1 
+# update: 2025, Nov 6
 
 #
 # --- Servicios (1 argumento alfabético) ---
@@ -447,7 +447,6 @@ nashelp() {
     done
     echo ""
 }
-
 # --- end TinyNAS  
 
 
@@ -462,12 +461,12 @@ nav_alias=(
     cdev    "cd ~/dev"
     cdot    "cd ~/.dotfiles"
     scr     "cd \$SCRIPTS"
-    gscr    "cd \$GENSCRIPTS"
     c       "clear"
     dotf    "cd \$DOTFILES"
     gdotf    "cd \$GENDOTFILES"
-    repos   "cd \$REPOS"
-    homelab "cd \$DOTFILES/homelab"
+    ghrepos   "cd \${GHREPOS}"
+    glrepos   "cd \${GLREPOS}"
+    homelab "cd \${GHREPOS}/homelab"
     blog    'cd ~/Documents/blog'
     d       "dirs -v"
     d1      "cd +1"
