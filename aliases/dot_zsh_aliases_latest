@@ -246,7 +246,7 @@ for nombre in ${(ok)chez_alias}; do
     alias $nombre="$chez_alias[$nombre]"
 done
 
-chhelp() {
+chehelp() {
     local desc="Gestionar chezmoi"
     echo "\033[1;34m--- Chezmoi Aliases ---\033[0m"
     for nombre in ${(ok)chez_alias}; do
@@ -261,9 +261,8 @@ chhelp() {
 typeset -AU git_alias
 git_alias=(
     g       "git"
-    gsta     "git status"
+    gtus     "git status"
     gadd     "git add"
-    gcom     "git commit"
     gcm     "git commit -m"
     gpush     "git push"
     gpull     "git pull"
@@ -277,7 +276,7 @@ for nombre comando in ${(kv)git_alias}; do
     alias $nombre="$comando"
 done
 
-ghelp() {
+githelp() {
     local desc="Comandos rapidos para Git"    
     echo "\033[1;34m--- Git Aliases ---\033[0m"
     for nombre in ${(ok)git_alias}; do
