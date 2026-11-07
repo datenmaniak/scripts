@@ -299,6 +299,7 @@ kube_alias=(
     ka    "kubectl apply"
     kl    "kubectl log"
     kube  "cd \$HOME/.kube"
+    kdelpod "kubectl delete pod "
 )
 
 for nombre comando in ${(kv)kube_alias}; do
@@ -406,7 +407,7 @@ sysdhelp() {
 # --- Tinynas NFS   --- 
 typeset -A tinycmd_alias
 tinycmd_alias=(
-    tinynas       "cd \$SCRIPTS/tinynas"
+    tinynas       "cd \$TINYNAS"
     gtinynas       "cd \$GENSCRIPTS/tinynas"
     log-tinynas   "tail -f /tmp/tinynas.log"
     verify-tinynas   "verifytinynas"
