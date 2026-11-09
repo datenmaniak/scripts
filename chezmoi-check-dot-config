@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+
+CONFIG_DIR="$HOME/.config"
+
+if [ ! -d "$CONFIG_DIR" ]; then
+  echo "Error: Directory $CONFIG_DIR does not exist." >&2
+  exit 1
+fi
+
+EXCLUDE_DIRS=(
+  "$HOME/.config/chezmoi"
+  "$HOME/.config/xfce4"
+  "$HOME/.config/mozilla"
+  "$HOME/.config/tmux"
+  "$HOME/.config/alacritty"
+)
+
+is_excluded() {
+  local dir="$1"
+  for exclude in "${EXCLUDE_DIRS[@]}"; do
+    if [[ "$dir" == "$exclude" ]] || [[ "$dir" == */"$exclude" ]] || [[ "$dir" == "$HOME/$exclude" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+has_potential_secret() {
+  local dir="$1"
+
+  # Check for common sensitive files or directories inside the config dir
+  if find "$dir" -maxdepth 2 \( \
+    -name "*.pem" -o \
+    -name "*.key" -o \
+    -name "id_rsa*" -o \
+    -name "id_ed25519*" -o \
+    -name "credentials*" -o \
+    -name "tokens*" -o \
+    -name ".env" -o \
+    -name "secrets*" -o \
+    -iname "*password*" -o \
+    -iname "*token*" \
+    \) 2>/dev/null | grep -q .; then
+    return 0
+  fi
+
+  return 1
+}
+
+mapfile -t ALL_CONFIG_DIRS < <(find "$CONFIG_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
+CONFIG_DIRS=()
+
+for dir in "${ALL_CONFIG_DIRS[@]}"; do
+  if ! is_excluded "$dir"; then
+    CONFIG_DIRS+=("$dir")
+  fi
+done
+
+print_help() {
+  echo "Usage: $0 [OPTION]"
+  echo "Manage ~/.config subdirectories using chezmoi with exclusions and secret detection."
+  echo ""
+  echo "Options:"
+  echo "  --list    Show all filtered subdirectories and flag potential secrets"
+  echo "  --add     Run 'chezmoi add' for each filtered subdirectory"
+  echo "  -h        Display this help message"
+}
+
+list_dirs() {
+  echo "Subdirectories in $CONFIG_DIR (excluding specified paths):"
+  echo "Note: Directories marked with [!] contain potential sensitive files/secrets."
+  echo ""
+  for dir in "${CONFIG_DIRS[@]}"; do
+    if has_potential_secret "$dir"; then
+      echo "  [!] $dir (potential secret found)"
+    else
+      echo "      $dir"
+    fi
+  done
+}
+
+add_dirs() {
+  echo "Adding filtered subdirectories to chezmoi..."
+  for dir in "${CONFIG_DIRS[@]}"; do
+    if has_potential_secret "$dir"; then
+      echo "Warning: Skipping or adding '$dir' which contains potential secrets. Review carefully."
+    fi
+    echo "Executing: chezmoi add \"$dir\""
+    chezmoi add "$dir"
+  done
+}
+
+case "$1" in
+--list)
+  list_dirs
+  ;;
+--add)
+  add_dirs
+  ;;
+-h | --help)
+  print_help
+  ;;
+*)
+  echo "Error: Invalid or missing argument." >&2
+  print_help
+  exit 1
+  ;;
+esac
