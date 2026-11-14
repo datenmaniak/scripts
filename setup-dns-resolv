@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# Verificar que se ejecute con privilegios de superusuario (sudo)
+# if [ "$EUID" -ne 0 ]; then
+#   echo "[-] Este script debe ejecutarse con sudo o como root." >&2
+#   exit 1
+# fi
+
+# Detectar automáticamente la interfaz Ethernet de forma robusta
+interfaz_ethernet=""
+for d in /sys/class/net/e*; do
+    if [ -d "$d" ]; then
+        interfaz_ethernet=$(basename "$d")
+        break
+    fi
+done
+
+# Validar si se encontró alguna interfaz
+if [ -z "$interfaz_ethernet" ]; then
+    echo "[-] No se encontró ninguna interfaz Ethernet activa." >&2
+    exit 1
+fi
+
+echo "[+] Interfaz Ethernet detectada: $interfaz_ethernet"
+
+# Configurar DNS y dominio usando resolvectl
+echo "[*] Configurando DNS para $interfaz_ethernet..."
+sudo resolvectl dns "$interfaz_ethernet" "192.168.1.83"
+
+echo "[*] Configurando dominio de búsqueda para $interfaz_ethernet..."
+sudo resolvectl domain "$interfaz_ethernet" "datenmaniak.lab"
+
+echo "[+] ¡Configuración de DNS aplicada con éxito!"

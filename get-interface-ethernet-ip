@@ -1,0 +1,9 @@
+#!/bin/bash
+# Busca interfaces que comiencen con "e" (Ethernet)
+interfaz_ethernet=$(ip -o link show | awk -F': ' '$2 ~ /^e/ {print $2}' | head -n 1)
+
+if [ -n "$interfaz_ethernet" ]; then
+    echo "Interfaz Ethernet encontrada: $interfaz_ethernet"
+else
+    echo "No se encontró ninguna interfaz Ethernet."
+fi

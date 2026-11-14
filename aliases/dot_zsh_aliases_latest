@@ -296,10 +296,11 @@ kube_alias=(
     kgn   "kubectl get nodes"
     kg    "kubectl get"
     kd    "kubectl describe"
-    ka    "kubectl apply"
+    kaf    "kubectl apply -f"
+    kak    "kubectl apply -k"
     kl    "kubectl log"
     kube  "cd \$HOME/.kube"
-    kdelpod "kubectl delete pod "
+    kdp   "kubectl delete pod "
 )
 
 for nombre comando in ${(kv)kube_alias}; do

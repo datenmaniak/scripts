@@ -417,20 +417,20 @@ tinycmd_alias=(
 
 # Ejecutar el backup sin DRY_RUN
 backuptinynas() {
-    $SCRIPTS/tinynas/backup-iteractivo-dirsfiles-tinynas.sh 
+    ${TINYNAS}/backup-iteractivo-dirsfiles-tinynas.sh 
     # "/home/wpp/Repos/github/datenmaniak/dotfiles/scripts/tinynas/backup-iteractivo-dirsfiles-tinynas.sh"
   }
 
 # Función específica para verify-tinynas (maneja la variable DRY_RUN perfectamente)
 verifytinynas() {
     local desc="Ejecutar backup de Tinynas en modo simulación (DRY_RUN)"
-    DRY_RUN=1 $SCRIPTS/tinynas/backup-iteractivo-dirsfiles-tinynas.sh
+    DRY_RUN=1 $TINYNAS/backup-iteractivo-dirsfiles-tinynas.sh
     # DRY_RUN=1 /home/wpp/Repos/github/datenmaniak/dotfiles/scripts/tinynas/backup-iteractivo-dirsfiles-tinynas.sh
 }
 
 purgetinynas() {
     local desc="Barrido de respaldo con eliminacion en el receiver)"
-    DELETE_AFTER=1 $SCRIPTS/tinynas/backup-iteractivo-dirsfiles-tinynas.sh
+    DELETE_AFTER=1 ${TINYNAS}/tinynas/backup-iteractivo-dirsfiles-tinynas.sh
     #DELETE_AFTER=1 /home/wpp/Repos/github/datenmaniak/dotfiles/scripts/tinynas/backup-iteractivo-dirsfiles-tinynas.sh
 }
 # for nombre comando in ${(@kv)tinycmd_alias}; do

@@ -1,0 +1,2 @@
+
+ kubectl -n longhorn-system get pods

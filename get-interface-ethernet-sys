@@ -1,0 +1,8 @@
+#!/bin/bash
+for interfaz in /sys/class/net/e*; do
+    if [ -e "$interfaz" ]; then
+        interfaz_ethernet=$(basename "$interfaz")
+        echo "Interfaz Ethernet encontrada: $interfaz_ethernet"
+        break
+    fi
+done

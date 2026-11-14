@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+# Comprobar conectividad básica con timeout de 2 segundos por paquete
+echo "[*] Comprobando conectividad IP..."
+if ping -c 2 -W 2 1.1.1.1 &>/dev/null; then
+    echo "[+] Conectividad externa OK (1.1.1.1)"
+else
+    echo "[-] Sin respuesta de ping a 1.1.1.1."
+fi
+
+if ping -c 2 -W 2 192.168.1.83 &>/dev/null; then
+    echo "[+] Conectividad  OK (DNS/192.168.1.83)"
+else
+    echo "[-] Sin respuesta de ping a 192.168.1.83"
+fi
+if ping -c 2 -W 2 192.168.1.110 &>/dev/null; then
+    echo "[+] Conectividad OK (Proxmox/192.168.1.110)"
+else
+    echo "[-] Sin respuesta de ping a 192.168.1.110"
+fi
+
+# Detectar interfaz Ethernet de forma automática para un reporte preciso
+interfaz_ethernet=""
+for d in /sys/class/net/e*; do
+    if [ -d "$d" ]; then
+        interfaz_ethernet=$(basename "$d")
+        break
+    fi
+done
+
+echo ""
+echo ">> Resolv DNS Status"
+echo "----------------------------------------"
+if command -v resolvectl &>/dev/null; then
+    if [ -n "$interfaz_ethernet" ]; then
+        resolvectl status "$interfaz_ethernet" | grep -E "Link |Current DNS Server|DNS Servers|Domains:"
+    else
+        resolvectl status | grep -E "Global|Current DNS Server|DNS Servers|Domains:"
+    fi
+    
+    echo ""
+    echo "[*] Probando resolución para cplane.datenmaniak.lab:"
+    resolvectl query   cplane.datenmaniak.lab 2>&1 || echo "[-] Fallo en la resolución de prueba."
+else
+    echo "[-] resolvectl no disponible. Leyendo /etc/resolv.conf:"
+    cat /etc/resolv.conf
+fi
