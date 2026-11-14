@@ -1,0 +1,5 @@
+
+
+curl -sSfL \
+  https://github.com/cloudnative-pg/cloudnative-pg/raw/main/hack/install-cnpg-plugin.sh | \
+  sudo sh -s -- -b $HOME/.local/bin/
