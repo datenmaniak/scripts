@@ -1,0 +1,169 @@
+#!/usr/bin/zsh 
+set -euo pipefail
+
+# ==============================================================================
+# Generador de fragmento fstab mediante flags (-d, -m, -f, -c)
+# ==============================================================================
+
+COMMENT=""
+DEVICE_PART=""
+MOUNT_POINT=""
+FSTYPE=""
+
+show_help() {
+    cat << EOF
+Uso: $0 -d <dispositivo> -m <punto_de_montaje> -f <filesystem> [-c "comentario"]
+
+Opciones obligatorias:
+  -d    Dispositivo de bloque (ej. /dev/sdb3 o sdb3)
+  -m    Punto de montaje absoluto (ej. /data, /mnt/longhorn - debe iniciar con /)
+  -f    Tipo de sistema de archivos (xfs, ext4, ext3, btrfs, zfs, f2fs, ntfs, vfat)
+
+Opciones adicionales:
+  -c    Comentario descriptivo para identificar la entrada en fstab
+  -h    Muestra esta ayuda
+
+Ejemplo:
+  $0 -d sdb3 -m /data -f xfs -c "Almacenamiento Longhorn K3s"
+EOF
+}
+
+# Si no se pasan argumentos, mostrar ayuda y salir
+if [[ $# -eq 0 ]]; then
+    show_help
+    exit 1
+fi
+
+# Procesar opciones mediante getopts
+while getopts ":d:m:f:c:h" opt; do
+    case ${opt} in
+        d)
+            DEVICE_PART="${OPTARG}"
+            ;;
+        m)
+            MOUNT_POINT="${OPTARG}"
+            ;;
+        f)
+            FSTYPE="${OPTARG}"
+            ;;
+        c)
+            COMMENT="${OPTARG}"
+            ;;
+        h)
+            show_help
+            exit 0
+            ;;
+        \?)
+            echo "Error: Opcion invalida: -${OPTARG}" >&2
+            echo ""
+            show_help
+            exit 1
+            ;;
+        :)
+            echo "Error: La opcion -${OPTARG} requiere un argumento." >&2
+            echo ""
+            show_help
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND -1))
+
+# Verificar si quedaron argumentos posicionales sueltos
+if [[ $# -gt 0 ]]; then
+    echo "Error: Argumentos no reconocidos: $*" >&2
+    echo ""
+    show_help
+    exit 1
+fi
+
+# 1. Validar individualmente que los flags obligatorios no estén vacíos (sin operador || complejo)
+if [[ -z "$DEVICE_PART" ]]; then
+    echo "Error: Falta la opción obligatoria -d (dispositivo)." >&2
+    show_help
+    exit 1
+fi
+
+if [[ -z "$MOUNT_POINT" ]]; then
+    echo "Error: Falta la opción obligatoria -m (punto de montaje)." >&2
+    show_help
+    exit 1
+fi
+
+if [[ -z "$FSTYPE" ]]; then
+    echo "Error: Falta la opción obligatoria -f (sistema de archivos)." >&2
+    show_help
+    exit 1
+fi
+
+# Auto-completar la ruta /dev/ si el usuario ingresó solo el nombre (ej. sdb3 -> /dev/sdb3)
+if [[ "$DEVICE_PART" != /* ]]; then
+    DEVICE_PART="/dev/${DEVICE_PART}"
+fi
+
+# 2. Validar que el dispositivo de bloque exista fisicamente
+if [[ ! -b "$DEVICE_PART" ]]; then
+    echo "Error: El dispositivo '$DEVICE_PART' no existe o no es un bloque valido." >&2
+    exit 1
+fi
+
+# 3. Validar que el punto de montaje sea absoluto y tenga caracteres permitidos
+if [[ ! "$MOUNT_POINT" =~ ^/[a-zA-Z0-9/_-]+$ ]]; then
+    echo "Error: El punto de montaje '$MOUNT_POINT' no es valido." >&2
+    echo "Debe ser una ruta absoluta que comience con '/' y solo contenga caracteres alfanumericos, slashes, underscores y guiones." >&2
+    exit 1
+fi
+
+# 4. Validar el tipo de sistema de archivos contra la lista permitida
+ALLOWED_FSTYPES=("xfs" "ext4" "ext3" "btrfs" "zfs" "f2fs" "ntfs" "vfat")
+VALID_FSTYPE=false
+
+for fs in "${ALLOWED_FSTYPES[@]}"; do
+    if [[ "$FSTYPE" == "$fs" ]]; then
+        VALID_FSTYPE=true
+        break
+    fi
+done
+
+if [[ "$VALID_FSTYPE" == "false" ]]; then
+    echo "Error: El sistema de archivos '$FSTYPE' no es valido o no esta permitido." >&2
+    echo "Sistemas de archivos permitidos: ${ALLOWED_FSTYPES[*]}" >&2
+    exit 1
+fi
+
+# 5. Obtener el UUID del dispositivo de forma segura
+UUID_PART="$(lsblk -no UUID "$DEVICE_PART" | tr -d '[:space:]')"
+
+if [[ -z "$UUID_PART" ]]; then
+    echo "Error: No se pudo obtener el UUID de '$DEVICE_PART'." >&2
+    echo "Asegurate de que la particion este formateada (ej. con mkfs.${FSTYPE})." >&2
+    exit 1
+fi
+
+# 6. Definir archivo de salida y limpiar version previa
+SNIPPET="fstab-snippet.txt"
+rm -f "$SNIPPET"
+
+# 7. Formatear comentario si fue proporcionado
+COMMENT_LINE=""
+if [[ -n "$COMMENT" ]]; then
+    COMMENT_LINE="${COMMENT// /-}-"
+fi
+
+OUTPUT_FILE="${COMMENT_LINE:l}${SNIPPET}"
+
+# 8. Generar el archivo con el bloque listo para /etc/fstab
+cat << EOF > "$OUTPUT_FILE"
+# ~~~ Mount Entry (${MOUNT_POINT}) ${COMMENT_LINE} ~~~
+#
+UUID=${UUID_PART} ${MOUNT_POINT} ${FSTYPE} defaults,x-systemd.requires=k3s-agent.service,x-systemd.after=k3s-agent.service  0  2
+
+# ~~~ 
+EOF
+
+echo ""
+echo "Contenido listo para insertar en /etc/fstab:"
+echo "--------------------------------------------------"
+cat "$OUTPUT_FILE"
+echo "---"
+echo "Archivo: '${OUTPUT_FILE}'"
