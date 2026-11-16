@@ -156,7 +156,7 @@ OUTPUT_FILE="${COMMENT_LINE:l}${SNIPPET}"
 cat << EOF > "$OUTPUT_FILE"
 # ~~~ Mount Entry (${MOUNT_POINT}) ${COMMENT_LINE} ~~~
 #
-UUID=${UUID_PART} ${MOUNT_POINT} ${FSTYPE} defaults,x-systemd.requires=k3s-agent.service,x-systemd.after=k3s-agent.service  0  2
+UUID=${UUID_PART} ${MOUNT_POINT} ${FSTYPE} defaults,nofail,x-systemd.requires=k3s-agent.service,x-systemd.after=k3s-agent.service  0  2
 
 # ~~~ 
 EOF
