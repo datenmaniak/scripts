@@ -381,24 +381,36 @@ uhelp() {
 
 
 # --- Systemd  --- 
-typeset -AU sysdcmd_alias
-sysdcmd_alias=(
-    ssdr  "sudo systemctl daemon-reload"
-    sssta   "sudo systemctl status"
-    ssres   "sudo systemctl restart"
-    sssto   "sudo systemctl stop"
-    sssto   "sudo systemctl stop"
+typeset -AU scmd_alias
+scmd_alias=(
+    ssmdre  "sudo systemctl daemon-reload"
+    ssmtus   "sudo systemctl status"
+    ssmart   "sudo systemctl restart"
+    ssmtop  "sudo systemctl stop"
+    ssmiac  "sudo systemctl is-active" 
+    ssmien  "sudo systemctl is-enabled" 
+    ssmifa  "sudo systemctl is-failed"
+    ssm     "systemctl"
+    ssmusr  "systemctl --user"
+    ssmenn "sudo systemctl enable --now"
+    ssmdis  "sudo systemctl disable"
 )
 
-for nombre comando in ${(@kv)sysdcmd_alias}; do
-    alias $nombre="$comando"
-done
 
-sysdhelp() {
-    local desc="Aliases Systemd"   
+
+for nombre in ${(ok)scmd_alias}; do
+    alias $nombre="$scmd_alias[$nombre]"
+done
+# for nombre comando in ${(@kv)scmd_alias}; do
+#     alias $nombre="$comando"
+# done
+
+ssmhelp() {
+    local desc="Systemd Aliases "   
+    echo "\033[1;34m--- Systemd Aliases ---\033[0m"
     # print -P "%B%F"{blue}--- Systemd Aliases  ---%f%b"
-    for nombre in ${(ok)sysdcmd_alias}; do
-        printf "  \033[1;32m%-6s\033[0m : %s\n" "$nombre" "$sysdcmd_alias[$nombre]"
+    for nombre in ${(ok)scmd_alias}; do
+        printf "  \033[1;32m%-6s\033[0m : %s\n" "$nombre" "$scmd_alias[$nombre]"
     done
     echo ""
 }
