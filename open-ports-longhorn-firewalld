@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+# ~~~~~ 1. Puertos obligatorios para Longhorn ~~~~~~
+# Longhorn requiere que los siguientes puertos estén abiertos
+# en todos los nodos del clúster (tanto TCP como UDP donde se especifique):
+
+# --- Puerto 3260 (TCP): Utilizado por el protocolo iSCSI para que el
+#      kernel de los nodos se conecte a los volúmenes de almacenamiento.
+
+# --- Puertos 9500 al 9503 (TCP): Utilizados por Longhorn para las APIs
+#     internas, la gestión de motores de volúmenes, respaldos y la
+#     interfaz CSI (longhorn-manager, longhorn-engine).
+
+# ~~~~~ 2. Puertos obligatorios para CloudNativePG y Kubernetes  ~~~~~
+#
+#     Para que los pods de PostgreSQL puedan comunicarse entre sí
+#     (replicación streaming entre la instancia primaria y las réplicas)
+#     y con el operador, asegúrate de tener abiertos:
+
+#     Puerto 5432 (TCP): El puerto por defecto de PostgreSQL
+#     (necesario entre los nodos si las réplicas corren en nodos distintos).
+
+#     Puertos de la red de Kubernetes (si usas firewalld activo con restricciones estrictas):
+
+#     6443 (TCP) - API Server.  10250 (TCP) - Kubelet API.
+#
+#
+set -euo pipefail
+
+# Comprobar que firewalld está instalado y activo
+if ! command -v firewall-cmd >/dev/null 2>&1; then
+  echo "ERROR: firewall-cmd no está instalado. Instala firewalld antes de ejecutar este script." >&2
+  exit 1
+fi
+
+if ! systemctl is-active --quiet firewalld; then
+  echo "ERROR: firewalld no está activo. Ejecuta: sudo systemctl enable --now firewalld" >&2
+  exit 1
+fi
+
+echo "==> Configurando reglas permanentes para Longhorn, CloudNativePG y Kubernetes "
+
+# 1. Abrir el puerto de iSCSI
+sudo firewall-cmd --permanent --add-port=3260/tcp
+
+# 2. Abrir el rango de puertos que usa Longhorn
+sudo firewall-cmd --permanent --add-port=9500-9503/tcp
+
+# 3. (Opcional recomendado) Permitir el tráfico interno de la red del clúster (ej. subred 192.168.1.0/24)
+# Esto asegura que todo el tráfico entre los nodos del homelab fluya sin restricciones de firewall
+# sudo firewall-cmd --permanent --add-source=192.168.1.0/24
+
+# 4. Recargar el firewall para aplicar los cambios
+sudo firewall-cmd --reload
