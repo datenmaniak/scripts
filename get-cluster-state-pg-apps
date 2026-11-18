@@ -1,0 +1,1 @@
+kubectl get cluster -n default pg-apps
