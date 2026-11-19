@@ -1,0 +1,5 @@
+
+# Suma de todos los PVCs (lógico) y su equivalente físico
+kubectl get pvc -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}: {.spec.resources.requests.storage}{"\n"}{end}'
+
+

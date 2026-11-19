@@ -1,0 +1,1 @@
+kubectl -n longhorn-system get pod -l app=longhorn-manager $@

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+#  Nov 19, 2026
+#  Make my own command 
+
+set -euo pipefail
+
+cmd="" file="" remark="" exec_flag=0 append_flag=0
+
+while getopts "c:f:r:xa" opt; do
+  case "$opt" in
+    c) cmd="$OPTARG" ;;
+    f) file="$OPTARG" ;;
+    r) remark="$OPTARG" ;;
+    x) exec_flag=1 ;;
+    a) append_flag=1 ;;
+    *) echo "Uso: $0 -f <file> [-c <cmd>] [-r <remark>] [-x] [-a]" >&2; exit 1 ;;
+  esac
+done
+
+[[ -z "$file" ]] && { echo "Uso: $0 -f <file> [-c <cmd>] [-r <remark>] [-x] [-a]" >&2; exit 1; }
+
+if [[ -n "$cmd" && -e "$file" && "$append_flag" -eq 0 ]]; then
+  echo "Error: '$file' ya existe. Usa -a para agregar -c, o ejecuta sin -c para actualizar -r o -x." >&2
+  exit 1
+fi
+
+if [[ -n "$cmd" || -n "$remark" ]]; then
+  if [[ ! -s "$file" ]]; then
+    printf '#!/bin/bash\n' > "$file"
+  elif ! head -n 1 "$file" | grep -qxF '#!/bin/bash'; then
+    tmp=$(mktemp)
+    { printf '#!/bin/bash\n'; cat "$file"; } > "$tmp" && mv "$tmp" "$file"
+  fi
+fi
+
+[[ -n "$remark" ]] && printf '# %s\n' "$remark" >> "$file"
+[[ -n "$cmd" ]] && printf '\n\n%s\n' "$cmd" >> "$file"
+
+(( exec_flag )) && chmod +x "$file"

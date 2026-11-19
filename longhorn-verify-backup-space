@@ -1,0 +1,5 @@
+#!/bin/bash
+# Verificar Tinynas para el Cluster k3s
+
+
+ssh tinynas 'df -h /srv/respaldos/k3s-cluster'

@@ -1,0 +1,5 @@
+for n in cplane wk1 wk2; do
+  echo "=== $n ==="
+  kubectl get nodes.longhorn.io $n.datenmaniak.lab -n longhorn-system \
+    -o jsonpath='{range .status.diskStatus.*}Disk: {.diskName}{"\n"}  Storage Maximum:   {.storageMaximum}{"\n"}  Storage Available: {.storageAvailable}{"\n"}  Storage Reserved:  {.storageReserved}{"\n"}  Storage Scheduled: {.storageScheduled}{"\n"}{end}'
+done

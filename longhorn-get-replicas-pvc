@@ -1,0 +1,5 @@
+
+
+# Volúmenes de Longhorn y sus réplicas reales
+kubectl get volumes.longhorn.io -n longhorn-system \
+  -o custom-columns=NAME:.metadata.name,SIZE:.spec.size,REPLICAS:.spec.numberOfReplicas,STATE:.status.state,ROBUSTNESS:.status.robustness

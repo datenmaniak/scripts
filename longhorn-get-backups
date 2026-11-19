@@ -1,0 +1,1 @@
+kubectl get backups.longhorn.io -n longhorn-system $@

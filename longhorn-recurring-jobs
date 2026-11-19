@@ -1,0 +1,5 @@
+#!/bin/bash
+# Get recurring jobs Longhorn
+
+
+kubectl get recurringjobs.longhorn.io -n longhorn-system

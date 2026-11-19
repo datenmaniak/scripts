@@ -1,0 +1,7 @@
+kubectl get replicas.longhorn.io -n longhorn-system -o custom-columns=\
+NAME:.metadata.name,\
+VOLUME:.spec.volumeName,\
+NODE:.spec.nodeID,\
+STATE:.status.currentState,\
+FAILED:.status.failedAt \
+-o wide

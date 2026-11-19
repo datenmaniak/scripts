@@ -1,0 +1,5 @@
+#!/bin/bash
+# Verificar Estado Backup
+
+
+kubectl get cronjob pg-apps-backup-daily -n longhorn-system $@

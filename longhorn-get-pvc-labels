@@ -1,0 +1,1 @@
+kubectl get pvc -n default -l cnpg.io/cluster=pg-apps --show-labels 

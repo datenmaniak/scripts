@@ -1,1 +1,4 @@
 kubectl get pvc -n default pg-apps-1
+
+kubectl get pvc -n default pg-apps-2
+kubectl get pvc -n default pg-apps-3
